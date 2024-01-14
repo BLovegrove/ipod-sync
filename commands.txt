@@ -1,0 +1,3 @@
+sync library ["rclone","copy","src","dst","--ignore-existing"]
+ffmpeg transcode ["ffmpeg","-i","src","-c:a","alac","-vcodec","copy","dst"]
+rename fdfind --extension ext1 --exec mv {} {.}.ext2
