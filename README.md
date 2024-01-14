@@ -1,0 +1,1 @@
+Designed to sync a copy of your flac lbrary to a local mac or linux pc and make sure album art / file types are compatible with ancient IPod Classic etc. Just set to run script once when your ipod is detected, sync on itunes when script finishes! Dependant on ffmpeg, ffprobe, ImageMagick vers. <6, fdfind, rclone. 
