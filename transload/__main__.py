@@ -28,7 +28,7 @@ class MusicDB:
         self.connection.close()
 
     def add_track(self, filename: str):
-        self.cursor.execute(f'INSERT INTO uploads VALUES("{filename},1")')
+        self.cursor.execute(f'INSERT INTO uploads VALUES("{filename}",1)')
 
     def get_tracks(self):
         tracks = []
