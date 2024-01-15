@@ -8,7 +8,7 @@ import os
 class MusicDB:
     def __init__(self) -> None:
         print("Starting database...")
-        db_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "db.sqlite")
+        db_path = cfg.db_location
 
         self.connection = sql.connect(db_path)
         self.connection.row_factory = sql.Row

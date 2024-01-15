@@ -1,5 +1,6 @@
 import os
 
+db_location = os.environ["DB_LOCATION"]
 lib_local = os.environ["LIB_LOCAL"]
 lib_remote = os.environ["LIB_REMOTE"]
 ext_local = os.environ["EXT_LOCAL"]
