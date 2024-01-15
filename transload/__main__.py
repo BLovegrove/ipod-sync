@@ -15,9 +15,12 @@ class MusicDB:
         self.cursor = self.connection.cursor()
 
         self.cursor.execute(
-            "CREATE TABLE IF NOT EXISTS uploads (file_name TEXT PRIMARY KEY)"
+            "CREATE TABLE IF NOT EXISTS uploads (file_name TEXT PRIMARY KEY, synced BOOLEAN NOT NULL CHECK (synced IN (0, 1)))"
         )
 
+        self.commit()
+
+    def commit(self):
         self.connection.commit()
 
     def kill(self):
@@ -25,7 +28,7 @@ class MusicDB:
         self.connection.close()
 
     def add_track(self, filename: str):
-        self.cursor.execute(f"INSERT INTO uploads VALUES({filename})")
+        self.cursor.execute(f'INSERT INTO uploads VALUES("{filename},1")')
 
     def get_tracks(self):
         tracks = []
@@ -52,12 +55,14 @@ class MusicDB:
 
 def upload(db: MusicDB):
     to_upload = []
+    synced = []
     tracks = db.get_tracks()
 
     print("Scanning files to upload...")
     for current_dir, folders, files in os.walk(cfg.lib_local):
         for file in files:
             if file.endswith(cfg.ext_local) and file not in tracks:
+                synced.append(file)
                 to_upload.append(os.path.abspath(os.path.join(current_dir, file)))
 
     print("Processing files...")
@@ -82,6 +87,7 @@ def upload(db: MusicDB):
                 cfg.lib_remote,
                 os.path.basename(file.replace(cfg.ext_local, cfg.ext_remote)),
             )
+            attempts = 0
             while True:
                 try:
                     subprocess.call(
@@ -96,14 +102,22 @@ def upload(db: MusicDB):
                             target,
                         ]
                     )
+                    attempts += 1
                     break
                 except:
+                    if attempts >= 10:
+                        print(
+                            f"Transcode failed 10 times! Skipping track {file} for now..."
+                        )
+
                     if os.path.exists(target):
                         os.remove(target)
                     print(
                         "Yikes! Got stuck while transcoding. Trying again after a 1 minute break."
                     )
                     time.sleep(60)
+
+            db.add_track(synced[to_upload.index(file)])
 
 
 def main():
