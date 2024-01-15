@@ -1,3 +1,4 @@
 sync library ["rclone","copy","src","dst","--ignore-existing"]
 ffmpeg transcode ["ffmpeg","-i","src","-c:a","alac","-vcodec","copy","dst"]
-rename fdfind --extension ext1 --exec mv {} {.}.ext2
+swap extensions ["fdfind","--extension","ext1","--exec","mv","{}","{.}.ext2"]
+check audio codec ["ffprobe","-v","error","-select_streams","a:0","-show_entries","stream=codec_name","-of","default=nokey=1:noprint_wrappers=1","file"]
