@@ -118,6 +118,7 @@ def upload(db: MusicDB):
                     time.sleep(60)
 
             db.add_track(synced[to_upload.index(file)])
+            db.commit()
 
 
 def main():
