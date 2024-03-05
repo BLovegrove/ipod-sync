@@ -28,8 +28,9 @@ class MusicDB:
         self.connection.close()
 
     def add_track(self, filename: str):
-        query = "INSERT INTO uploads(file_name,synced) VALUES (%s,1)"
-        self.cursor.execute(query, (filename,))
+        filename_clean = filename.strip("\"'`")
+        query = f"INSERT INTO uploads(file_name,synced) VALUES ({filename_clean},1)"
+        self.cursor.execute(query)
 
     def get_tracks(self):
         tracks = []
@@ -44,8 +45,9 @@ class MusicDB:
     def track_exists(self, filename: str):
         exists = False
         try:
-            query = "SELECT * FROM uploads WHERE file_name=%s"
-            self.cursor.execute(query, (filename,))
+            filename_clean = filename.strip("\"'`")
+            query = f"SELECT * FROM uploads WHERE file_name={filename_clean}"
+            self.cursor.execute(query)
             result = self.cursor.fetchone()[0]
             if result:
                 exists = True
