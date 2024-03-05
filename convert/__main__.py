@@ -3,6 +3,7 @@ import sqlite3 as sql
 import time
 from convert import config as cfg
 import os
+from pathlib import Path
 
 
 class MusicDB:
@@ -15,7 +16,7 @@ class MusicDB:
         self.cursor = self.connection.cursor()
 
         self.cursor.execute(
-            "CREATE TABLE IF NOT EXISTS uploads (file_name TEXT PRIMARY KEY, synced BOOLEAN NOT NULL CHECK (synced IN (0, 1)))"
+            "CREATE TABLE IF NOT EXISTS uploads (file_name TEXT PRIMARY KEY,synced BOOLEAN)"
         )
 
         self.commit()
@@ -46,7 +47,7 @@ class MusicDB:
         exists = False
         try:
             filename_clean = filename.replace("'", "").replace('"', "").replace("`", "")
-            query = f"SELECT * FROM uploads WHERE file_name={filename_clean}"
+            query = f'SELECT * FROM uploads WHERE file_name="{filename_clean}"'
             self.cursor.execute(query)
             result = self.cursor.fetchone()[0]
             if result:
@@ -60,14 +61,22 @@ class MusicDB:
 def upload(db: MusicDB):
     to_upload = []
     synced = []
-    tracks = db.get_tracks()
 
     print("Scanning files to upload...")
     for current_dir, folders, files in os.walk(cfg.lib_local):
         for file in files:
-            if file.endswith(cfg.ext_local) and file not in tracks:
-                synced.append(file)
-                to_upload.append(os.path.abspath(os.path.join(current_dir, file)))
+            file_path = os.path.abspath(os.path.join(current_dir, file))
+            album_name = Path(file_path).parent.name
+            unique_name = f"{album_name}_{file}"
+            if (
+                file.endswith(cfg.ext_local)
+                and db.track_exists(unique_name) == False
+                and unique_name not in synced
+            ):
+                to_upload.append(file_path)
+                synced.append(unique_name)
+            else:
+                print(f"Track {file} already processed: skipping...")
 
     print("Processing files...")
     for file in to_upload:
@@ -87,8 +96,11 @@ def upload(db: MusicDB):
         )
 
         if cfg.ext_local.replace(".", "") in str(codec):
+            album_name = Path(file).parent.name
+            os.makedirs(os.path.join(cfg.lib_remote, album_name), exist_ok=True)
+
             target = os.path.join(
-                cfg.lib_remote,
+                cfg.lib_remote + f"/{album_name}",
                 os.path.basename(file.replace(cfg.ext_local, cfg.ext_remote)),
             )
             attempts = 0
