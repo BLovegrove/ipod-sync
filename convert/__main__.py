@@ -1,7 +1,7 @@
 import subprocess
 import sqlite3 as sql
 import time
-from transload import config as cfg
+from convert import config as cfg
 import os
 
 
@@ -28,7 +28,8 @@ class MusicDB:
         self.connection.close()
 
     def add_track(self, filename: str):
-        self.cursor.execute(f'INSERT INTO uploads VALUES("{filename}",1)')
+        query = "INSERT INTO uploads VALUES (%s,1)" % (filename)
+        self.cursor.execute(query)
 
     def get_tracks(self):
         tracks = []

@@ -1,5 +1,4 @@
 import sqlite3 as sql
-from libsync import config as cfg
 import os
 
 

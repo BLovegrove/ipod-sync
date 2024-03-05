@@ -8,4 +8,4 @@ RUN apt-get update \
     && apt-get install -qq -y ffmpeg --no-install-recommends\
     && apt-get clean
 
-CMD ["python","-m","transload"]
+CMD ["python","-m","convert"]
