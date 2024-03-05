@@ -29,7 +29,7 @@ class MusicDB:
 
     def add_track(self, filename: str):
         filename_clean = filename.strip("\"'`")
-        query = f"INSERT INTO uploads(file_name,synced) VALUES ({filename_clean},1)"
+        query = f'INSERT INTO uploads(file_name,synced) VALUES ("{filename_clean}",1)'
         self.cursor.execute(query)
 
     def get_tracks(self):
