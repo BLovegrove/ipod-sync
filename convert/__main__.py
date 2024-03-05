@@ -44,7 +44,8 @@ class MusicDB:
     def track_exists(self, filename: str):
         exists = False
         try:
-            self.cursor.execute(f'SELECT * FROM uploads WHERE filename="{filename}"')
+            query = "SELECT * FROM uploads WHERE filename=%s" % (filename)
+            self.cursor.execute(query)
             result = self.cursor.fetchone()[0]
             if result:
                 exists = True
