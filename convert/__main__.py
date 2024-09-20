@@ -1,14 +1,32 @@
+import sys
+import logging.handlers
 import subprocess
 import sqlite3 as sql
 import time
 from convert import config as cfg
 import os
 from pathlib import Path
+import logging
+from logging import StreamHandler
+from logging.handlers import RotatingFileHandler
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    handlers=[
+        RotatingFileHandler("./run.log", maxBytes=100000, backupCount=10),
+        StreamHandler(sys.stdout),
+    ],
+    filename="latest.log",
+    encoding="utf-8",
+    level=cfg.log_level,
+    format="%(asctime)s | %(message)s",
+    datefmt="%d/%m/%Y %I:%M:%S %p",
+)
 
 
 class MusicDB:
     def __init__(self) -> None:
-        print("Starting database...")
+        logger.info("Starting database...")
         db_path = cfg.db_location
 
         self.connection = sql.connect(db_path)
@@ -59,10 +77,13 @@ class MusicDB:
 
 
 def upload(db: MusicDB):
+    skipped = []
+    # file names of tracks to upload
     to_upload = []
+    # unique names of tracks (album_trackfile)
     synced = []
 
-    print("Scanning files to upload...")
+    logger.info("Scanning files to upload...")
     for current_dir, folders, files in os.walk(cfg.lib_local):
         for file in files:
             file_path = os.path.abspath(os.path.join(current_dir, file))
@@ -76,10 +97,16 @@ def upload(db: MusicDB):
                 to_upload.append(file_path)
                 synced.append(unique_name)
             else:
-                print(f"Track {file} already processed: skipping...")
+                logger.info(f"Track {file} already processed: skipping...")
+                skipped.append(file_path)
 
-    print("Processing files...")
+    logger.info(
+        f"[{len(skipped) + len(to_upload)}] Tracks found. [{len(skipped)}] Already in destination system. Processing remaining [{len(to_upload)}] files..."
+    )
     for file in to_upload:
+        logger.info(
+            f"Starting transcode for track #[{to_upload.index(file) + 1}] of #[{len(to_upload)}]: [{Path(file).parent.name}]/[{file}]."
+        )
         codec = subprocess.check_output(
             [
                 "ffprobe",
@@ -121,18 +148,25 @@ def upload(db: MusicDB):
                     attempts += 1
                     break
                 except:
+                    # too many failed attempts
                     if attempts >= 10:
-                        print(
-                            f"Transcode failed 10 times! Skipping track {file} for now..."
+                        logger.fatal(
+                            f"TRANSCODE_CRITICAL. Transcoder failed to process track [{target}] 10 times in succession. Something is likely wrong with its file/format."
                         )
 
+                    # clear file for next attempt
                     if os.path.exists(target):
                         os.remove(target)
-                    print(
-                        "Yikes! Got stuck while transcoding. Trying again after a 1 minute break."
+
+                    # transcode cooldown
+                    logger.warning(
+                        f"TRANSCODE_FAILURE. Transcoder failed while processing track [{target}]."
                     )
                     time.sleep(60)
 
+            logger.info(
+                f"TRANSCODE_SUCCESS. Track [{target}] is being sent to your configured destination."
+            )
             db.add_track(synced[to_upload.index(file)])
             db.commit()
 
