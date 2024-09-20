@@ -7,19 +7,22 @@ from convert import config as cfg
 import os
 from pathlib import Path
 import logging
+import coloredlogs
 
+coloredlogs.install()
 logger = logging.getLogger(__name__)
+
 logging.basicConfig(
     encoding="utf-8",
     level=cfg.log_level,
-    format="%(asctime)s | %(message)s",
     datefmt="%d/%m/%Y %I:%M:%S %p",
 )
+
 file_handler = logging.handlers.RotatingFileHandler(
-    cfg.db_location + "run.log", maxBytes=100000, backupCount=10, encoding="utf-8"
+    "/database/run.log", maxBytes=1073741824, backupCount=10, encoding="utf-8"
 )
-console_handler = logging.StreamHandler(sys.stdout)
-logger.addHandler(console_handler)
+# console_handler = logging.StreamHandler(sys.stdout)
+# logger.addHandler(console_handler)
 logger.addHandler(file_handler)
 
 
@@ -104,7 +107,7 @@ def upload(db: MusicDB):
     )
     for file in to_upload:
         logger.info(
-            f"Starting transcode for track #[{to_upload.index(file) + 1}] of #[{len(to_upload)}]: [{Path(file).parent.name}]/[{file}]."
+            f"Starting transcode for track #[{to_upload.index(file) + 1}] of #[{len(to_upload)}]: [{Path(file).parent.name}]/[{os.path.basename(file)}]."
         )
         codec = subprocess.check_output(
             [
