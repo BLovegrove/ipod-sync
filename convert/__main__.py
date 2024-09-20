@@ -7,21 +7,21 @@ from convert import config as cfg
 import os
 from pathlib import Path
 import logging
-from logging import StreamHandler
-from logging.handlers import RotatingFileHandler
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
-    handlers=[
-        RotatingFileHandler("./run.log", maxBytes=100000, backupCount=10),
-        StreamHandler(sys.stdout),
-    ],
     filename="latest.log",
     encoding="utf-8",
     level=cfg.log_level,
     format="%(asctime)s | %(message)s",
     datefmt="%d/%m/%Y %I:%M:%S %p",
 )
+file_handler = logging.handlers.RotatingFileHandler(
+    "./run.log", maxBytes=100000, backupCount=10
+)
+console_handler = logging.StreamHandler(sys.stdout)
+logger.addHandler(console_handler)
+logger.addHandler(file_handler)
 
 
 class MusicDB:
