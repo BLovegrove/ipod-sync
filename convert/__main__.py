@@ -10,14 +10,13 @@ import logging
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
-    filename="latest.log",
     encoding="utf-8",
     level=cfg.log_level,
     format="%(asctime)s | %(message)s",
     datefmt="%d/%m/%Y %I:%M:%S %p",
 )
 file_handler = logging.handlers.RotatingFileHandler(
-    "./run.log", maxBytes=100000, backupCount=10
+    cfg.db_location + "run.log", maxBytes=100000, backupCount=10, encoding="utf-8"
 )
 console_handler = logging.StreamHandler(sys.stdout)
 logger.addHandler(console_handler)
@@ -150,7 +149,7 @@ def upload(db: MusicDB):
                 except:
                     # too many failed attempts
                     if attempts >= 10:
-                        logger.fatal(
+                        logger.critical(
                             f"TRANSCODE_CRITICAL. Transcoder failed to process track [{target}] 10 times in succession. Something is likely wrong with its file/format."
                         )
 
@@ -175,7 +174,7 @@ def main():
     db = MusicDB()
     upload(db)
     db.kill()
-    input("Done! Enjoy your music")
+    logger.info("Done! Enjoy your music")
 
 
 if __name__ == "__main__":
