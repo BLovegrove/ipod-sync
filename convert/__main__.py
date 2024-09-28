@@ -1,4 +1,3 @@
-import sys
 import logging.handlers
 import subprocess
 import sqlite3 as sql
@@ -7,19 +6,21 @@ from convert import config as cfg
 import os
 from pathlib import Path
 import logging
-import coloredlogs
 
-coloredlogs.install()
 logger = logging.getLogger(__name__)
 
 logging.basicConfig(
     encoding="utf-8",
     level=cfg.log_level,
     datefmt="%d/%m/%Y %I:%M:%S %p",
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 
 file_handler = logging.handlers.RotatingFileHandler(
-    "/database/run.log", maxBytes=1073741824, backupCount=10, encoding="utf-8"
+    Path(cfg.db_location).parent.joinpath("run.log"),
+    maxBytes=1073741824,
+    backupCount=10,
+    encoding="utf-8",
 )
 # console_handler = logging.StreamHandler(sys.stdout)
 # logger.addHandler(console_handler)
@@ -86,13 +87,13 @@ def upload(db: MusicDB):
     synced = []
 
     logger.info("Scanning files to upload...")
-    for current_dir, folders, files in os.walk(cfg.lib_local):
+    for current_dir, folders, files in os.walk(cfg.lib_import):
         for file in files:
             file_path = os.path.abspath(os.path.join(current_dir, file))
             album_name = Path(file_path).parent.name
             unique_name = f"{album_name}_{file}"
             if (
-                file.endswith(cfg.ext_local)
+                file.endswith(cfg.ext_import)
                 and db.track_exists(unique_name) == False
                 and unique_name not in synced
             ):
@@ -124,13 +125,13 @@ def upload(db: MusicDB):
             ]
         )
 
-        if cfg.ext_local.replace(".", "") in str(codec):
+        if cfg.ext_import.replace(".", "") in str(codec):
             album_name = Path(file).parent.name
-            os.makedirs(os.path.join(cfg.lib_remote, album_name), exist_ok=True)
+            os.makedirs(os.path.join(cfg.lib_export, album_name), exist_ok=True)
 
             target = os.path.join(
-                cfg.lib_remote + f"/{album_name}",
-                os.path.basename(file.replace(cfg.ext_local, cfg.ext_remote)),
+                cfg.lib_export + f"/{album_name}",
+                os.path.basename(file.replace(cfg.ext_import, ".m4a")),
             )
             attempts = 0
             while True:
@@ -141,9 +142,13 @@ def upload(db: MusicDB):
                             "-i",
                             file,
                             "-c:a",
-                            cfg.ffmpeg_target,
+                            "alac",
                             "-c:v",
                             "copy",
+                            "-sample_fmt",
+                            "s16p",
+                            "-ar",
+                            "44100",
                             target,
                         ]
                     )
