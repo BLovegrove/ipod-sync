@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 
 # use this when testing outside a docker environment. run like: python -m convert --test
-if sys.argv[1] == "--test" or sys.argv[1] == "-t":
+if sys.argv[1] and (sys.argv[1] == "--test" or sys.argv[1] == "-t"):
     os.environ["DB_LOCATION"] = "./testing/db.sqlite"
     os.environ["LIB_IMPORT"] = "./testing/import"
     os.environ["LIB_EXPORT"] = "./testing/export"
