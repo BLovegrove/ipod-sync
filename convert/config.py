@@ -4,12 +4,15 @@ import sys
 from pathlib import Path
 
 # use this when testing outside a docker environment. run like: python -m convert --test
-if sys.argv[1] and (sys.argv[1] == "--test" or sys.argv[1] == "-t"):
-    os.environ["DB_LOCATION"] = "./testing/db.sqlite"
-    os.environ["LIB_IMPORT"] = "./testing/import"
-    os.environ["LIB_EXPORT"] = "./testing/export"
-    os.environ["EXT_IMPORT"] = ".flac"
-    os.environ["LOG_LEVEL"] = "20"
+try:
+    if sys.argv[1] == "--test" or sys.argv[1] == "-t":
+        os.environ["DB_LOCATION"] = "./testing/db.sqlite"
+        os.environ["LIB_IMPORT"] = "./testing/import"
+        os.environ["LIB_EXPORT"] = "./testing/export"
+        os.environ["EXT_IMPORT"] = ".flac"
+        os.environ["LOG_LEVEL"] = "20"
+except Exception:
+    pass
 
 # where does the database file go?
 db_location = os.environ["DB_LOCATION"]
